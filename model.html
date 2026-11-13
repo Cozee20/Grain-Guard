@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GrainGuard 3D model</title>
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --page:#eef2f3; --surface:#fbfcfc; --ink:#14232a; --ink-2:#455a63; --line:#d5dee2;
+    --accent:#0f6b7a; --soft:#dcecef; --stage:#dfe9ee;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --page:#0f171a; --surface:#162227; --ink:#e4eef1; --ink-2:#aec1c8; --line:#263840; --accent:#5cc0d2; --soft:#1c3a42; --stage:#1a2a31; }
+  }
+  :root[data-theme="dark"] { --page:#0f171a; --surface:#162227; --ink:#e4eef1; --ink-2:#aec1c8; --line:#263840; --accent:#5cc0d2; --soft:#1c3a42; --stage:#1a2a31; }
+  html { height:100%; background:var(--page); }
+  *, *::before, *::after { box-sizing:inherit; }
+  body { margin:0; height:100%; display:flex; flex-direction:column; background:var(--page); color:var(--ink); font:15px/1.5 var(--sans); }
+  header { padding:12px 18px; border-bottom:1px solid var(--line); background:var(--surface); display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; }
+  h1 { margin:0; font-size:20px; color:var(--accent); }
+  header span { color:var(--ink-2); font-size:14px; }
+  .app { flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 300px; }
+  .stage { position:relative; background:var(--stage); min-height:320px; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; cursor:grab; }
+  .bar { position:absolute; top:10px; left:10px; right:10px; display:flex; gap:6px; flex-wrap:wrap; }
+  button { font:inherit; font-size:14px; font-weight:600; cursor:pointer; border-radius:99px; padding:6px 13px; border:1px solid rgba(20,35,42,.2); background:rgba(251,252,252,.94); color:#14232a; }
+  button[aria-pressed="true"] { background:#0f6b7a; color:#fff; border-color:#0f6b7a; }
+  aside { padding:16px 18px; overflow:auto; background:var(--surface); border-left:1px solid var(--line); }
+  aside h2 { font-size:16px; margin:0 0 8px; }
+  ol { margin:0 0 14px; padding-left:20px; color:var(--ink-2); font-size:14px; }
+  ol b { color:var(--ink); }
+  p { margin:0 0 10px; color:var(--ink-2); font-size:14px; }
+  @media (max-width: 760px) { .app { grid-template-columns:1fr; grid-template-rows:minmax(340px,55vh) auto; } aside { border-left:0; border-top:1px solid var(--line); } body { height:auto; } html { height:auto; } }
+</style>
+</head>
+<body>
+<header><h1>GrainGuard</h1><span>Smart grain storage bin - 3D model (drag to rotate, scroll or pinch to zoom)</span></header>
+<div class="app">
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div class="bar" id="bar">
+      <button data-v="persp" aria-pressed="true">3D</button>
+      <button data-v="front" aria-pressed="false">Front</button>
+      <button data-v="top" aria-pressed="false">Top</button>
+      <button data-v="right" aria-pressed="false">Right</button>
+      <button id="cut" aria-pressed="false">Cutaway</button>
+      <button id="grain" aria-pressed="true">Grain</button>
+    </div>
+  </div>
+  <aside>
+    <h2>Parts</h2>
+    <ol>
+      <li><b>Bin body</b> 80 x 80 x 100 cm</li>
+      <li><b>Legs</b> (4) 20 cm high</li>
+      <li><b>Loading hatch</b> 40 x 40 cm</li>
+      <li><b>Perforated false floor</b> + 10 cm air plenum</li>
+      <li><b>Aeration fan</b> 12 V DC, back wall</li>
+      <li><b>Exhaust vent</b> with insect mesh</li>
+      <li><b>Sensor probe</b> with 3 temp/RH sensors</li>
+      <li><b>Control box</b> display, LEDs, buzzer</li>
+      <li><b>Discharge gate</b> 20 x 15 cm</li>
+      <li><b>Level window</b></li>
+    </ol>
+    <p>Fan switches on when humidity is above 70 % RH or temperature above 30 C. Buzzer sounds above 40 C.</p>
+    <p>Use <b>Cutaway</b> to see the probe, sensors, grain and the air plenum.</p>
+  </aside>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  var canvas = document.getElementById('c');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  var scene = new THREE.Scene(); scene.background = new THREE.Color(0xdfe9ee);
+  var camera = new THREE.PerspectiveCamera(40, 1, 1, 2000);
+  var controls = new THREE.OrbitControls(camera, canvas);
+  controls.target.set(0, 60, 0); controls.enableDamping = true;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8899a0, 0.85));
+  var sun = new THREE.DirectionalLight(0xffffff, 0.7); sun.position.set(150, 250, 200); scene.add(sun);
+  var floor = new THREE.Mesh(new THREE.CircleGeometry(160, 48), new THREE.MeshBasicMaterial({ color: 0x9fb0b8, transparent: true, opacity: 0.35 }));
+  floor.rotation.x = -Math.PI / 2; scene.add(floor);
+
+  function mat(c, o) { return new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, metalness: 0.15, transparent: o !== undefined, opacity: o === undefined ? 1 : o }); }
+  var wallMats = [];
+  // design coords: x width, z height, y depth (front y=0). three: x, z->up, y->(40 - y)
+  function B(x0, x1, z0, z1, y0, y1, m, isWall) {
+    var g = new THREE.BoxGeometry(x1 - x0, z1 - z0, y1 - y0);
+    var me = new THREE.Mesh(g, m);
+    me.position.set((x0 + x1) / 2, (z0 + z1) / 2, 40 - (y0 + y1) / 2);
+    scene.add(me); if (isWall) wallMats.push(m); return me;
+  }
+  var body = mat(0xe3ebee), steel = mat(0xb4c2c9), dark = mat(0x33444c), teal = mat(0x0f6b7a), amber = mat(0xe08a2c), glass = mat(0x9fd1de, 0.8);
+  [body].forEach(function (m) { wallMats.push(m); });
+  // legs
+  [[-40, -35], [35, 40]].forEach(function (a) { [[0, 5], [75, 80]].forEach(function (b) { B(a[0], a[1], 0, 20, b[0], b[1], steel); }); });
+  // base
+  B(-40, 40, 20, 22, 0, 80, body);
+  // front wall with gate opening (z 34-49, x -10..10)
+  B(-40, 40, 22, 34, 0, 2, body); B(-40, 40, 49, 120, 0, 2, body);
+  B(-40, -10, 34, 49, 0, 2, body); B(10, 40, 34, 49, 0, 2, body);
+  // back wall with fan opening (z 22-32, x -5..5)
+  B(-40, 40, 32, 120, 78, 80, body); B(-40, -5, 22, 32, 78, 80, body); B(5, 40, 22, 32, 78, 80, body);
+  // side walls
+  B(-40, -38, 22, 120, 2, 78, body); B(38, 40, 22, 120, 2, 78, body);
+  // top panel around hatch opening (x -20..20, y 10..50)
+  B(-40, 40, 118, 120, 0, 10, body); B(-40, 40, 118, 120, 50, 80, body);
+  B(-40, -20, 118, 120, 10, 50, body); B(20, 40, 118, 120, 10, 50, body);
+  // perforated floor
+  var pf = B(-38, 38, 32, 33, 2, 78, mat(0x6b7c85));
+  // hatch + handle
+  B(-20, 20, 120, 125, 10, 50, steel); B(-6, 6, 125, 127, 12, 14, dark);
+  // gate + handle
+  B(-12, 12, 34, 50, -1.5, 0, steel); B(-4, 4, 40, 42, -4, -1.5, dark);
+  // level window
+  B(22, 30, 50, 105, -0.4, 0, glass);
+  // name plate
+  var cv = document.createElement('canvas'); cv.width = 512; cv.height = 256;
+  var cx = cv.getContext('2d'); cx.fillStyle = '#0f6b7a'; cx.fillRect(0, 0, 512, 256);
+  cx.fillStyle = '#fff'; cx.font = 'bold 74px sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText('GrainGuard', 256, 128);
+  var np = B(-35, -5, 95, 110, -0.4, 0, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) }));
+  // control box on right side
+  B(40, 50, 80, 110, 10, 35, mat(0x9db0b8));
+  B(50, 50.4, 86, 94, 14, 28, new THREE.MeshBasicMaterial({ color: 0xbfe8c3 }));
+  [0x3a9e4a, 0xe0a82c, 0xc74a3a].forEach(function (c, i) { var s = new THREE.Mesh(new THREE.SphereGeometry(1.3, 16, 12), new THREE.MeshBasicMaterial({ color: c })); s.position.set(50.6, 100, 40 - (16 + i * 5)); scene.add(s); });
+  // exhaust vent
+  B(22, 34, 120, 123, 59, 71, steel); for (var i = 0; i < 4; i++) B(23, 33, 123, 123.6, 61 + i * 3, 61.8 + i * 3, dark);
+  // probe cap + rod + sensors
+  var cap = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 3, 24), amber); cap.position.set(-25, 121.5, 40 - 65); scene.add(cap);
+  var rod = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 80, 16), dark); rod.position.set(-25, 80, 40 - 65); scene.add(rod);
+  [100, 75, 50].forEach(function (z) { var s = new THREE.Mesh(new THREE.SphereGeometry(2.6, 20, 14), amber); s.position.set(-25, z, 40 - 65); scene.add(s); });
+  // fan
+  B(-5, 5, 22, 32, 80, 83, dark);
+  var guard = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.35, 8, 24), steel); guard.position.set(0, 27, 40 - 83.2); scene.add(guard);
+  // grain
+  var grain = B(-38, 38, 33, 110, 2, 78, mat(0xe9cf78, 0.5));
+  grain.visible = true;
+
+  var cutOn = false;
+  function applyCut() {
+    wallMats.forEach(function (m) { m.transparent = true; m.opacity = cutOn ? 0.18 : 1; m.depthWrite = !cutOn; m.needsUpdate = true; });
+    steel.needsUpdate = true;
+  }
+  var bt = { persp: [200, 150, 260], front: [0, 62, 330], top: [0, 400, 0.1], right: [330, 62, 0] };
+  var look = { persp: [0, 62, 0], front: [0, 62, 0], top: [0, 0, 0], right: [0, 62, 0] };
+  document.querySelectorAll('[data-v]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('[data-v]').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+      b.setAttribute('aria-pressed', 'true');
+      var v = b.dataset.v; camera.position.set.apply(camera.position, bt[v]); controls.target.set.apply(controls.target, look[v]); controls.update();
+    });
+  });
+  document.getElementById('cut').addEventListener('click', function () { cutOn = !cutOn; this.setAttribute('aria-pressed', cutOn); applyCut(); });
+  document.getElementById('grain').addEventListener('click', function () { grain.visible = !grain.visible; this.setAttribute('aria-pressed', grain.visible); });
+
+  camera.position.set.apply(camera.position, bt.persp); controls.update();
+  function resize() { var r = canvas.parentElement.getBoundingClientRect(); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+  window.addEventListener('resize', resize); resize();
+  (function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+})();
+</script>
+</body>
+</html>

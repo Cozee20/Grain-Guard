@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GrainGuard</title>
+<style>
+  :root { --page:#eef2f3; --surface:#fbfcfc; --ink:#14232a; --ink-2:#455a63; --line:#d5dee2; --accent:#0f6b7a; --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  @media (prefers-color-scheme: dark) { :root { --page:#0f171a; --surface:#162227; --ink:#e4eef1; --ink-2:#aec1c8; --line:#263840; --accent:#5cc0d2; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--ink); font:16px/1.55 var(--sans); }
+  main { max-width:760px; margin:0 auto; padding:40px 20px; }
+  h1 { margin:0 0 6px; font-size:34px; color:var(--accent); }
+  .sub { margin:0 0 28px; color:var(--ink-2); }
+  .grid { display:grid; gap:14px; }
+  a.card { display:block; text-decoration:none; color:inherit; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+  a.card:hover { border-color:var(--accent); }
+  a.card b { display:block; font-size:18px; color:var(--accent); margin-bottom:2px; }
+  a.card span { color:var(--ink-2); font-size:15px; }
+  footer { margin-top:30px; color:var(--ink-2); font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>GrainGuard</h1>
+  <p class="sub">A smart grain storage bin that watches temperature and humidity and switches an aeration fan automatically. Design and simulation project by Ogidan Oluwafolahan Samuel, Department of Agricultural and Environmental Engineering, University of Ibadan.</p>
+  <div class="grid">
+    <a class="card" href="simulator.html"><b>Controller simulator</b><span>Change the weather, or load a weather file, and watch the fan and alarm react. Runs in your browser.</span></a>
+    <a class="card" href="model.html"><b>3D model</b><span>Rotate the bin, switch between front, top and side views, and use the cutaway to see inside.</span></a>
+    <a class="card" href="drawings.pdf"><b>Orthographic drawings (PDF)</b><span>Front, top and side views and a section, with dimensions in centimetres.</span></a>
+  </div>
+  <footer>This is a design and a simulation. No physical unit has been built or tested, and the simulator uses a simplified model, not measured data. Weather data, if loaded from Open-Meteo, is licensed CC BY 4.0.</footer>
+</main>
+</body>
+</html>
